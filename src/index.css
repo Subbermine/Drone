@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    letter-spacing: -0.01em;
+  }
+
+  body {
+    background-color: #07111E;
+    color: #FFFFFF;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.03em;
+  }
+}
+
+/* Electric Cyan Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #040912;
+}
+::-webkit-scrollbar-thumb {
+  background: #0E2A4A;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00C2FF;
+}
+
+/* Subtle High-Tech Grids */
+.bg-cyan-grid,
+.bg-cyber-grid {
+  background-size: 60px 60px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 194, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 194, 255, 0.05) 1px, transparent 1px);
+}
+
+.bg-light-grid,
+.bg-cyber-grid-light {
+  background-size: 60px 60px;
+  background-image: 
+    linear-gradient(to right, rgba(11, 25, 44, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(11, 25, 44, 0.05) 1px, transparent 1px);
+}

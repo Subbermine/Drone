@@ -493,9 +493,9 @@ export const DroneCanvas: React.FC<DroneCanvasProps> = ({ className = '' }) => {
         </div>
       )}
 
-      {/* UI Overlay: 360 Drag Hint */}
+      {/* UI Overlay: 360 Drag Hint (hidden on phone viewports) */}
       {!loading && !error && (
-        <div className="absolute bottom-3 right-3 z-20 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#07111E]/80 backdrop-blur-md border border-[#00C2FF]/30 text-[10px] font-mono text-[#94A3B8]">
+        <div className="hidden sm:flex absolute bottom-3 right-3 z-20 pointer-events-none items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#07111E]/80 backdrop-blur-md border border-[#00C2FF]/30 text-[10px] font-mono text-[#94A3B8]">
           <Move3d className="w-3 h-3 text-[#00C2FF]" />
           <span>DRAG TO ROTATE 360°</span>
         </div>

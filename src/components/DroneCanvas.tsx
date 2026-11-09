@@ -301,105 +301,119 @@ export const DroneCanvas: React.FC<DroneCanvasProps> = ({ className = '' }) => {
       }),
     };
 
-    // 9. Load the Drone GLB
+    // 9. Load the Drone GLB with automatic fallback
     const loader = new GLTFLoader();
-    const modelUrl = '/flightlessdrone.glb';
+    const primaryUrl = '/flightlessdrone.glb';
+    const fallbackUrl = '/drone.glb';
 
-    loader.load(
-      modelUrl,
-      (gltf) => {
-        if (isDisposed) return;
-        const model = gltf.scene;
+    const setupModel = (gltf: any) => {
+      if (isDisposed) return;
+      const model = gltf.scene;
 
-        // Attach rotating propeller assemblies to all 4 motors
-        // Authentic quadcopter pairing:
-        // Diagonal pair (motor 1 & 2): spin direction = 1 (Clockwise)
-        // Diagonal pair (motor 3 & 4): spin direction = -1 (Counter-Clockwise)
-        const motorConfigs = [
-          { name: 'motor_top1', direction: 1 },
-          { name: 'motor_top2', direction: 1 },
-          { name: 'motor_top3', direction: -1 },
-          { name: 'motor_top4', direction: -1 },
-        ];
+      // Attach rotating propeller assemblies to all 4 motors
+      // Authentic quadcopter pairing:
+      // Diagonal pair (motor 1 & 2): spin direction = 1 (Clockwise)
+      // Diagonal pair (motor 3 & 4): spin direction = -1 (Counter-Clockwise)
+      const motorConfigs = [
+        { name: 'motor_top1', direction: 1 },
+        { name: 'motor_top2', direction: 1 },
+        { name: 'motor_top3', direction: -1 },
+        { name: 'motor_top4', direction: -1 },
+      ];
 
-        motorConfigs.forEach(({ name, direction }) => {
-          let motorNode: THREE.Object3D | null = model.getObjectByName(name) || null;
-          if (!motorNode) {
-            model.traverse((child) => {
-              if (child.name.toLowerCase() === name.toLowerCase()) {
-                motorNode = child;
-              }
-            });
-          }
-
-          if (motorNode) {
-            const prop = buildPropellerGroup(direction, propGeos, propMats);
-            // Position propeller flush on top of the motor cap (Y = 1.48)
-            prop.position.set(0, 1.48, 0);
-            motorNode.add(prop);
-            motorAssemblies.push({ motor: motorNode, direction });
-          }
-        });
-
-        // CRITICAL STEP 1: Calculate raw bounding box
-        const rawBox = new THREE.Box3().setFromObject(model);
-        const rawSize = rawBox.getSize(new THREE.Vector3());
-        const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
-
-        // CRITICAL STEP 2: Scale model to target unit dimension (2.8 units)
-        const targetScale = 2.8 / maxDim;
-        model.scale.setScalar(targetScale);
-        model.updateMatrixWorld(true);
-
-        // CRITICAL STEP 3: Recompute bounding box of SCALED model
-        const scaledBox = new THREE.Box3().setFromObject(model);
-        const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
-
-        // CRITICAL STEP 4: Translate model so its scaled center is exactly (0, 0, 0)
-        model.position.x -= scaledCenter.x;
-        model.position.y -= scaledCenter.y;
-        model.position.z -= scaledCenter.z;
-        model.updateMatrixWorld(true);
-
-        // CRITICAL STEP 5: Enhance all materials for visibility and cyber sheen
-        model.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh;
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-
-            if (mesh.material) {
-              const mat = mesh.material as THREE.MeshStandardMaterial;
-              mat.side = THREE.DoubleSide; // Render both sides of every polygon
-
-              // Prevent extreme mirror-black absorption
-              if (mat.metalness > 0.8) {
-                mat.roughness = Math.max(mat.roughness, 0.28);
-              }
-              mat.needsUpdate = true;
+      motorConfigs.forEach(({ name, direction }) => {
+        let motorNode: THREE.Object3D | null = model.getObjectByName(name) || null;
+        if (!motorNode) {
+          model.traverse((child: any) => {
+            if (child.name && child.name.toLowerCase() === name.toLowerCase()) {
+              motorNode = child;
             }
-          }
-        });
-
-        pivot.add(model);
-        setLoading(false);
-      },
-      (xhr) => {
-        if (xhr.total > 0) {
-          const percent = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
-          setLoadProgress(percent);
-        } else if (xhr.loaded > 0) {
-          const approxTotal = 23446248;
-          const percent = Math.min(99, Math.round((xhr.loaded / approxTotal) * 100));
-          setLoadProgress(percent);
+          });
         }
-      },
-      (err) => {
-        console.error('Error loading drone.glb:', err);
-        setError('3D Model failed to initialize');
-        setLoading(false);
-      }
-    );
+
+        if (motorNode) {
+          const prop = buildPropellerGroup(direction, propGeos, propMats);
+          // Position propeller flush on top of the motor cap (Y = 1.48)
+          prop.position.set(0, 1.48, 0);
+          motorNode.add(prop);
+          motorAssemblies.push({ motor: motorNode, direction });
+        }
+      });
+
+      // CRITICAL STEP 1: Calculate raw bounding box
+      const rawBox = new THREE.Box3().setFromObject(model);
+      const rawSize = rawBox.getSize(new THREE.Vector3());
+      const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
+
+      // CRITICAL STEP 2: Scale model to target unit dimension (2.8 units)
+      const targetScale = 2.8 / maxDim;
+      model.scale.setScalar(targetScale);
+      model.updateMatrixWorld(true);
+
+      // CRITICAL STEP 3: Recompute bounding box of SCALED model
+      const scaledBox = new THREE.Box3().setFromObject(model);
+      const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
+
+      // CRITICAL STEP 4: Translate model so its scaled center is exactly (0, 0, 0)
+      model.position.x -= scaledCenter.x;
+      model.position.y -= scaledCenter.y;
+      model.position.z -= scaledCenter.z;
+      model.updateMatrixWorld(true);
+
+      // CRITICAL STEP 5: Enhance all materials for visibility and cyber sheen
+      model.traverse((child: any) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+
+          if (mesh.material) {
+            const mat = mesh.material as THREE.MeshStandardMaterial;
+            mat.side = THREE.DoubleSide; // Render both sides of every polygon
+
+            // Prevent extreme mirror-black absorption
+            if (mat.metalness > 0.8) {
+              mat.roughness = Math.max(mat.roughness, 0.28);
+            }
+            mat.needsUpdate = true;
+          }
+        }
+      });
+
+      pivot.add(model);
+      setLoading(false);
+    };
+
+    const loadWithFallback = (url: string, isFallback: boolean = false) => {
+      loader.load(
+        url,
+        (gltf) => {
+          setupModel(gltf);
+        },
+        (xhr) => {
+          if (xhr.total > 0) {
+            const percent = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
+            setLoadProgress(percent);
+          } else if (xhr.loaded > 0) {
+            const approxTotal = isFallback ? 23446248 : 16813184;
+            const percent = Math.min(99, Math.round((xhr.loaded / approxTotal) * 100));
+            setLoadProgress(percent);
+          }
+        },
+        (err) => {
+          if (!isFallback) {
+            console.warn(`Could not load model from ${url}, attempting fallback to ${fallbackUrl}...`, err);
+            loadWithFallback(fallbackUrl, true);
+          } else {
+            console.error('All 3D drone models failed to load:', err);
+            setError('3D Model failed to initialize');
+            setLoading(false);
+          }
+        }
+      );
+    };
+
+    loadWithFallback(primaryUrl);
 
     // 10. Animation Loop
     const clock = new THREE.Clock();
